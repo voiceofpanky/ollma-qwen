@@ -109,8 +109,8 @@
 <script>
 
 
- // const BASE_URL = "https://my-ollama-server.onrender.com"; 
-  const BASE_URL = "http://localhost:11434"; 
+  const BASE_URL = "https://ollma-qwen.onrender.com"; 
+ // const BASE_URL = "http://localhost:11434"; 
   // Change to your Render URL
 
   async function listModels() {
@@ -128,7 +128,7 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "tinyllama",
+        model: "phi3:mini",
         prompt: prompt,
         stream: false
       })
@@ -146,7 +146,7 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "tinyllama",
+        model: "phi3:mini",
         stream: false,
         messages: [
           { role: "user", content: message }
