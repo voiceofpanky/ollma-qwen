@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: my-ollama-server
+    env: docker
+    plan: starter
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+
+    envVars:
+      - key: OLLAMA_HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 3000
+
+    healthCheckPath: /api/tags
+
+    disk:
+      name: ollama-models
+      mountPath: /root/.ollama
+      sizeGB: 20
