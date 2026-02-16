@@ -1,13 +1,10 @@
 #!/bin/bash
 
-# Start Ollama server in background
 ollama serve &
 
-# Give Ollama time to boot
 sleep 5
 
-# Pull Qwen3 model
-ollama pull qwen3:8b || true
+# Use a small model that fits Render Starter
+ollama pull phi3:mini || true
 
-# Start Node server
 node server.js

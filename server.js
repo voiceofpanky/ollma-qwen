@@ -41,7 +41,7 @@ app.get("/api/tags", async (req, res) => {
 
 // Generate
 app.post("/api/generate", async (req, res) => {
-  const { prompt, model = "qwen3:8b" } = req.body;
+  const { prompt, model = "phi3:mini" } = req.body;
 
   try {
     const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
@@ -58,7 +58,7 @@ app.post("/api/generate", async (req, res) => {
 
 // Chat
 app.post("/api/chat", async (req, res) => {
-  const { messages, model = "qwen3:8b" } = req.body;
+  const { messages, model = "phi3:mini" } = req.body;
 
   try {
     const response = await axios.post(`${OLLAMA_URL}/api/chat`, {
