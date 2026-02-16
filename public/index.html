@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Ollama Demo UI</title>
+  <title>My AI Powered Local LLM</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,6 +38,7 @@
       padding: 25px;
       border-radius: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: relative;
     }
 
     h2 {
@@ -68,94 +70,518 @@
       background: #1d4ed8;
     }
 
+    /* COLLAPSIBLE SECTIONS */
+    .collapsible-header {
+      background: #e2e8f0;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .arrow {
+      display: inline-block;
+      transition: transform 0.2s ease;
+    }
+
+    .arrow.expanded {
+      transform: rotate(180deg);
+    }
+
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .collapsible-inner {
+      padding-top: 8px;
+    }
+
     pre {
       background: #f1f5f9;
       padding: 15px;
       border-radius: 6px;
       white-space: pre-wrap;
-      margin-top: 10px;
       border: 1px solid #e2e8f0;
+      margin: 0;
+    }
+
+    /* OVERLAY GREY OPACITY */
+    #overlay {
+      display: none;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(2px);
+      z-index: 10;
+      border-radius: 10px;
+    }
+
+    /* SPINNER */
+    #spinner {
+      display: none;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+    }
+
+    #spinner div {
+      border: 4px solid #e2e8f0;
+      border-top: 4px solid #2563eb;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* CHATGPT-STYLE CHAT BUBBLES */
+    #chatOutput {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 350px;
+      overflow-y: auto;
+      padding: 10px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .chat-message {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .chat-message.user {
+      justify-content: flex-end;
+    }
+
+    .chat-message.ai {
+      justify-content: flex-start;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: #e2e8f0;
+      flex-shrink: 0;
+    }
+
+    .avatar.user {
+      background: #2563eb;
+      color: white;
+    }
+
+    .avatar.ai {
+      background: #0f172a;
+      color: #facc15;
+    }
+
+    .bubble {
+      max-width: 70%;
+      padding: 10px 12px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.4;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.15);
+      background: white;
+      position: relative;
+    }
+
+    .chat-message.user .bubble {
+      background: #2563eb;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-message.ai .bubble {
+      background: white;
+      color: #0f172a;
+      border-bottom-left-radius: 4px;
+    }
+
+    .timestamp {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .chat-message.ai .timestamp {
+      text-align: left;
     }
   </style>
 </head>
 
 <body>
 
-<header>Ollama Demo UI</header>
+<header>My AI-Powered Local LLM</header>
 
 <div class="container">
+
+  <!-- GREY OVERLAY + SPINNER -->
+  <div id="overlay"></div>
+  <div id="spinner"><div></div></div>
+
+  <!-- SETTINGS -->
+  <h2>⚙️ Settings</h2>
+  <label>Local Endpoint (BASE_URL)</label>
+  <input id="endpointInput" value="http://localhost:11434" />
+
+  <label>Model Name</label>
+  <input id="modelInput" value="phi3:mini" />
 
   <!-- MODEL LIST -->
   <h2>1. List Available Models (/api/tags)</h2>
   <button onclick="listModels()">Load Models</button>
-  <pre id="modelsOutput">Click the button to load models...</pre>
+
+  <div class="collapsible-header" data-target="modelsContent">
+    <span id="arrow-models" class="arrow">▼</span>
+    <span>Models Output</span>
+  </div>
+  <div id="modelsContent" class="collapsible-content">
+    <div class="collapsible-inner">
+      <pre id="modelsOutput">Click the button to load models...</pre>
+    </div>
+  </div>
 
   <!-- GENERATE -->
   <h2>2. Generate Text (/api/generate)</h2>
   <textarea id="generatePrompt" rows="3" placeholder="Enter a prompt..."></textarea>
   <button onclick="generateText()">Generate</button>
-  <pre id="generateOutput">Generated text will appear here...</pre>
+
+  <div class="collapsible-header" data-target="generateContent">
+    <span id="arrow-generate" class="arrow">▼</span>
+    <span>Generate Output</span>
+  </div>
+  <div id="generateContent" class="collapsible-content">
+    <div class="collapsible-inner">
+      <pre id="generateOutput">Generated text will appear here...</pre>
+    </div>
+  </div>
 
   <!-- CHAT -->
   <h2>3. Chat Conversation (/api/chat)</h2>
   <textarea id="chatMessage" rows="3" placeholder="Ask something..."></textarea>
   <button onclick="chat()">Send Message</button>
-  <pre id="chatOutput">Chat responses will appear here...</pre>
+
+  <div class="collapsible-header" data-target="chatContent">
+    <span id="arrow-chat" class="arrow">▼</span>
+    <span>Chat Output</span>
+  </div>
+  <div id="chatContent" class="collapsible-content">
+    <div class="collapsible-inner">
+      <div id="chatOutput">
+        <!-- Chat bubbles will be appended here -->
+      </div>
+    </div>
+  </div>
 
 </div>
 
-<footer>Powered by Ollama • Render Deployment Demo • Designed by <a href="https://www.linkedin.com/in/pankaj-s-2b50173b/" target="_blank"><strong>Pankaj Sao</strong></a> </footer>
+<footer>
+  Powered by Ollama • Designed by 
+  <a href="https://www.linkedin.com/in/pankaj-s-2b50173b/" target="_blank"><strong>Pankaj Sao</strong></a>
+</footer>
 
 <script>
+  /* UTILITIES */
 
-
-  const BASE_URL = "https://ollma-qwen.onrender.com"; 
- // const BASE_URL = "http://localhost:11434"; 
-  // Change to your Render URL
-
-  async function listModels() {
-    console.log("Fetching models...");
-    const res = await fetch(`${BASE_URL}/api/tags`);
-    const data = await res.json();
-    document.getElementById("modelsOutput").textContent = JSON.stringify(data, null, 2);
+  function getBaseUrl() {
+    return document.getElementById("endpointInput").value.trim();
   }
 
+  function getModelName() {
+    return document.getElementById("modelInput").value.trim();
+  }
+
+  function showSpinner() {
+    document.getElementById("overlay").style.display = "block";
+    document.getElementById("spinner").style.display = "block";
+  }
+
+  function hideSpinner() {
+    document.getElementById("overlay").style.display = "none";
+    document.getElementById("spinner").style.display = "none";
+  }
+
+  function setArrowState(targetId, expanded) {
+    const map = {
+      modelsContent: "arrow-models",
+      generateContent: "arrow-generate",
+      chatContent: "arrow-chat"
+    };
+    const arrowId = map[targetId];
+    if (!arrowId) return;
+    const arrow = document.getElementById(arrowId);
+    if (!arrow) return;
+
+    if (expanded) {
+      arrow.classList.add("expanded");
+      arrow.textContent = "▲";
+    } else {
+      arrow.classList.remove("expanded");
+      arrow.textContent = "▼";
+    }
+  }
+
+  /* COLLAPSIBLE LOGIC WITH REMEMBER LAST EXPANDED */
+
+  function expandOnly(targetId) {
+    const sections = ["modelsContent", "generateContent", "chatContent"];
+    let expandedNow = null;
+
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      if (id === targetId) {
+        if (el.style.maxHeight) {
+          el.style.maxHeight = null; // collapse
+          setArrowState(id, false);
+        } else {
+          el.style.maxHeight = el.scrollHeight + "px"; // expand
+          setArrowState(id, true);
+          expandedNow = id;
+        }
+      } else {
+        el.style.maxHeight = null;
+        setArrowState(id, false);
+      }
+    });
+
+    if (expandedNow) {
+      localStorage.setItem("lastExpandedSection", expandedNow);
+    } else {
+      localStorage.removeItem("lastExpandedSection");
+    }
+  }
+
+  function restoreLastExpanded() {
+    const last = localStorage.getItem("lastExpandedSection");
+    if (!last) return;
+    const el = document.getElementById(last);
+    if (el) {
+      el.style.maxHeight = el.scrollHeight + "px";
+      setArrowState(last, true);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Header click toggles
+    document.querySelectorAll(".collapsible-header").forEach(header => {
+      header.addEventListener("click", () => {
+        const targetId = header.getAttribute("data-target");
+        expandOnly(targetId);
+      });
+    });
+
+    restoreLastExpanded();
+  });
+
+  /* STREAMING HELPER WITH AUTO-SCROLL */
+
+  async function streamResponse(response, callback, onChunk) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n").filter(l => l.trim() !== "");
+
+      for (const line of lines) {
+        try {
+          const json = JSON.parse(line);
+          callback(json);
+          if (onChunk) onChunk();
+        } catch {
+          // ignore non-JSON lines
+        }
+      }
+    }
+  }
+
+  /* MODELS */
+
+  async function listModels() {
+    expandOnly("modelsContent");
+
+    const BASE_URL = getBaseUrl();
+    //showSpinner();
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/tags`);
+      const data = await res.json();
+      const outputEl = document.getElementById("modelsOutput");
+      outputEl.textContent = JSON.stringify(data, null, 2);
+      outputEl.scrollIntoView({ behavior: "smooth", block: "end" });
+    } catch (err) {
+      document.getElementById("modelsOutput").textContent = "Error: " + err;
+    }
+
+    hideSpinner();
+  }
+
+  /* GENERATE STREAM */
+
   async function generateText() {
-    console.log("Generating text...");
+    expandOnly("generateContent");
+
+    const BASE_URL = getBaseUrl();
+    const model = getModelName();
     const prompt = document.getElementById("generatePrompt").value;
+
+    const outputEl = document.getElementById("generateOutput");
+    outputEl.textContent = "";
+    //showSpinner();
 
     const res = await fetch(`${BASE_URL}/api/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "phi3:mini",
+        model: model,
         prompt: prompt,
-        stream: false
+        stream: true
       })
     });
 
-    const data = await res.json();
-    document.getElementById("generateOutput").textContent = data.response || JSON.stringify(data, null, 2);
+    await streamResponse(
+      res,
+      (json) => {
+        if (json.response) {
+          outputEl.textContent += json.response;
+        }
+      },
+      () => {
+        outputEl.scrollIntoView({ behavior: "smooth", block: "end" });
+      }
+    );
+
+    hideSpinner();
+  }
+
+  /* CHAT BUBBLES + STREAM */
+
+  function addChatBubble(role, text) {
+    const container = document.getElementById("chatOutput");
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("chat-message", role);
+
+    const avatar = document.createElement("div");
+    avatar.classList.add("avatar", role);
+    avatar.textContent = role === "user" ? "🔵" : "🤖";
+
+    const bubble = document.createElement("div");
+    bubble.classList.add("bubble");
+    bubble.textContent = text;
+
+    const timestamp = document.createElement("div");
+    timestamp.classList.add("timestamp");
+    const now = new Date();
+    timestamp.textContent = now.toLocaleTimeString();
+
+    bubble.appendChild(timestamp);
+
+    if (role === "user") {
+      wrapper.appendChild(bubble);
+      wrapper.appendChild(avatar);
+    } else {
+      wrapper.appendChild(avatar);
+      wrapper.appendChild(bubble);
+    }
+
+    container.appendChild(wrapper);
+    container.scrollTop = container.scrollHeight;
   }
 
   async function chat() {
-    console.log("Sending chat message...");
+    expandOnly("chatContent");
+
+    const BASE_URL = getBaseUrl();
+    const model = getModelName();
     const message = document.getElementById("chatMessage").value;
+
+    if (!message.trim()) return;
+
+    const chatOutput = document.getElementById("chatOutput");
+
+    // Add user bubble
+    addChatBubble("user", message);
+
+    //showSpinner();
 
     const res = await fetch(`${BASE_URL}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "phi3:mini",
-        stream: false,
-        messages: [
-          { role: "user", content: message }
-        ]
+        model: model,
+        stream: true,
+        messages: [{ role: "user", content: message }]
       })
     });
 
-    const data = await res.json();
-    document.getElementById("chatOutput").textContent = data.message?.content || JSON.stringify(data, null, 2);
+    // Create AI bubble and stream into it
+    const aiWrapper = document.createElement("div");
+    aiWrapper.classList.add("chat-message", "ai");
+
+    const avatar = document.createElement("div");
+    avatar.classList.add("avatar", "ai");
+    avatar.textContent = "🤖";
+
+    const bubble = document.createElement("div");
+    bubble.classList.add("bubble");
+
+    const contentSpan = document.createElement("span");
+    contentSpan.textContent = "";
+
+    const timestamp = document.createElement("div");
+    timestamp.classList.add("timestamp");
+    const now = new Date();
+    timestamp.textContent = now.toLocaleTimeString();
+
+    bubble.appendChild(contentSpan);
+    bubble.appendChild(timestamp);
+
+    aiWrapper.appendChild(avatar);
+    aiWrapper.appendChild(bubble);
+    chatOutput.appendChild(aiWrapper);
+    chatOutput.scrollTop = chatOutput.scrollHeight;
+
+    await streamResponse(
+      res,
+      (json) => {
+        if (json.message?.content) {
+          contentSpan.textContent += json.message.content;
+        }
+      },
+      () => {
+        chatOutput.scrollTop = chatOutput.scrollHeight;
+      }
+    );
+
+    hideSpinner();
   }
 </script>
 

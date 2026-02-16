@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ollama Demo UI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    header {
+      background: #1e293b;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    footer {
+      background: #1e293b;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      margin-top: 40px;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-top: 40px;
+      color: #1e293b;
+    }
+
+    textarea, input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 12px;
+      padding: 12px 20px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    pre {
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      margin-top: 10px;
+      border: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>Ollama Demo UI</header>
+
+<div class="container">
+
+  <!-- MODEL LIST -->
+  <h2>1. List Available Models (/api/tags)</h2>
+  <button onclick="listModels()">Load Models</button>
+  <pre id="modelsOutput">Click the button to load models...</pre>
+
+  <!-- GENERATE -->
+  <h2>2. Generate Text (/api/generate)</h2>
+  <textarea id="generatePrompt" rows="3" placeholder="Enter a prompt..."></textarea>
+  <button onclick="generateText()">Generate</button>
+  <pre id="generateOutput">Generated text will appear here...</pre>
+
+  <!-- CHAT -->
+  <h2>3. Chat Conversation (/api/chat)</h2>
+  <textarea id="chatMessage" rows="3" placeholder="Ask something..."></textarea>
+  <button onclick="chat()">Send Message</button>
+  <pre id="chatOutput">Chat responses will appear here...</pre>
+
+</div>
+
+<footer>Powered by Ollama • Render Deployment Demo • Designed by <a href="https://www.linkedin.com/in/pankaj-s-2b50173b/" target="_blank"><strong>Pankaj Sao</strong></a> </footer>
+
+<script>
+
+
+  //const BASE_URL = "https://ollma-qwen.onrender.com"; 
+ const BASE_URL = "http://localhost:11434"; 
+  // Change to your Render URL
+
+  async function listModels() {
+    console.log("Fetching models...");
+    const res = await fetch(`${BASE_URL}/api/tags`);
+    const data = await res.json();
+    document.getElementById("modelsOutput").textContent = JSON.stringify(data, null, 2);
+  }
+
+  async function generateText() {
+    console.log("Generating text...");
+    const prompt = document.getElementById("generatePrompt").value;
+
+    const res = await fetch(`${BASE_URL}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "phi3:mini",
+        prompt: prompt,
+        stream: false
+      })
+    });
+
+    const data = await res.json();
+    document.getElementById("generateOutput").textContent = data.response || JSON.stringify(data, null, 2);
+  }
+
+  async function chat() {
+    console.log("Sending chat message...");
+    const message = document.getElementById("chatMessage").value;
+
+    const res = await fetch(`${BASE_URL}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "phi3:mini",
+        stream: false,
+        messages: [
+          { role: "user", content: message }
+        ]
+      })
+    });
+
+    const data = await res.json();
+    document.getElementById("chatOutput").textContent = data.message?.content || JSON.stringify(data, null, 2);
+  }
+</script>
+
+</body>
+</html>

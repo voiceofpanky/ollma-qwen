@@ -4,7 +4,6 @@ ollama serve &
 
 sleep 5
 
-# Use a small model that fits Render Starter
-ollama pull phi3:mini || true
+ollama pull qwen2:0.5b || true
 
 node server.js
