@@ -243,12 +243,25 @@
   <div id="spinner"><div></div></div>
 
   <!-- SETTINGS -->
-  <h2>⚙️ Settings</h2>
-  <label>Local Endpoint (BASE_URL)</label>
-  <input id="endpointInput" value="https://dense-undertaken-tell-meals.trycloudflare.com" />
+<!-- SETTINGS (Collapsible) -->
+<div class="collapsible-header" data-target="settingsContent">
+  <span id="arrow-settings" class="arrow">▼</span>
+  <span>⚙️ Settings</span>
+</div>
 
-  <label>Model Name</label>
-  <input id="modelInput" value="tinyllama:latest" />
+<div id="settingsContent" class="collapsible-content">
+  <div class="collapsible-inner">
+
+    <label>Local Endpoint (BASE_URL)</label>
+    <input type="password" id="endpointInput"
+      value="https://dense-undertaken-tell-meals.trycloudflare.com" />
+
+    <label>Model Name</label>
+    <input id="modelInput" value="tinyllama:latest" />
+
+  </div>
+</div>
+
 
   <!-- MODEL LIST -->
   <h2>1. List Available Models (/api/tags)</h2>
@@ -326,6 +339,7 @@
 
   function setArrowState(targetId, expanded) {
     const map = {
+       settingsContent: "arrow-settings",
       modelsContent: "arrow-models",
       generateContent: "arrow-generate",
       chatContent: "arrow-chat"
@@ -347,7 +361,7 @@
   /* COLLAPSIBLE LOGIC WITH REMEMBER LAST EXPANDED */
 
   function expandOnly(targetId) {
-    const sections = ["modelsContent", "generateContent", "chatContent"];
+    const sections = ["modelsContent", "generateContent", "chatContent" , "settingsContent"];
     let expandedNow = null;
 
     sections.forEach(id => {
